@@ -9,6 +9,7 @@ pub fn read_until_eof() -> Result<String, Box<dyn std::error::Error>> {
         if bytes_read == 0 {
             break;
         }
+        write!(input, "{}", buf)?;
     }
 
     Ok(input)

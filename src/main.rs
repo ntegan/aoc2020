@@ -1,8 +1,8 @@
 mod input;
 mod myerror;
 
-// Day 1
-// =====
+// Day 1.1
+// =======
 // 5th year of AOC. Vacation at nice resort on tropical island.
 // has its own currency and is entirely cash-only!
 //
@@ -11,6 +11,10 @@ mod myerror;
 //
 // Need to find two entries that sum up to 2020 and then multiply
 // those numbers together
+//
+// Day 1.2
+// =======
+// find 3 numbers that meet the same criteria?
 //
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,12 +27,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 0..expense_report_entries.len() {
         for j in 0..expense_report_entries.len() {
-            let a = expense_report_entries[i];
-            let b = expense_report_entries[j];
-            if a + b == 2020 {
-                println!("{} + {} == 2020", a, b);
-                println!("{} * {} == {}", a, b, a * b);
-                return Ok(());
+            for k in 0..expense_report_entries.len() {
+                let a = expense_report_entries[i];
+                let b = expense_report_entries[j];
+                let c = expense_report_entries[k];
+                if a + b + c == 2020 {
+                    println!("{} + {} + {} == 2020", a, b, c);
+                    println!("{} * {} * {} == {}", a, b, c, a * b * c);
+                    return Ok(());
+                }
             }
         }
     }

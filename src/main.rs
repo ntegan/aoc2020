@@ -93,107 +93,92 @@ mod myerror;
 //
 // How many trees would encounter with the real map input?
 
-mod authentication {
-    use regex::Regex;
-    use std::fmt;
+
+/// Coordinate system:
+///     e.g. slope is right 3, down 1
+///     top left is (0, 0)
+///     next point is (3, 1)
+mod day_three {
+    use crate::myerror;
 
     #[derive(Debug)]
-    pub struct Policy {
-        start: u64,
-        end: u64,
-        letter: char,
-    }
-
-    impl fmt::Display for Policy {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{}-{} {}", self.start, self.end, self.letter)
-        }
-    }
-
+    pub struct Pair(pub u64, pub u64);
     #[derive(Debug)]
-    pub struct Entry {
-        policy: Policy,
-        password: String,
+    struct Toboggan {
+        slope: Pair,
     }
-    impl fmt::Display for Entry {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{}: {}", self.policy, self.password)
+    #[derive(Debug)]
+    enum GridSpace {
+        Me(Toboggan),
+        Open,
+        Tree,
+    }
+    impl GridSpace {
+        pub fn from_char(car: char) -> Result<GridSpace, Box<dyn std::error::Error>> {
+            match car {
+                '.' => Ok(GridSpace::Open),
+                '#' => Ok(GridSpace::Tree),
+                _ => Err(Box::new(myerror::MyError)),
+            }
         }
     }
-
-    impl Entry {
-        /// Ensure the frequency of self.policy.letter in self.password
-        /// is in [self.policy.start, self.policy.ent]
-        pub fn is_valid(&self) -> bool {
-            if self.password.len() < self.policy.end as usize {
-                return false;
-            }
-            let mut value = 0;
-            if self
-                .password
-                .chars()
-                .nth((self.policy.start - 1) as usize)
-                .unwrap()
-                == self.policy.letter
-            {
-                value = value + 1;
-            }
-            if self
-                .password
-                .chars()
-                .nth((self.policy.end - 1) as usize)
-                .unwrap()
-                == self.policy.letter
-            {
-                value = value + 1;
-            }
-            value == 1
+    #[derive(Debug)]
+    struct TobogganMapLine {
+        spaces: Vec<GridSpace>,
+    }
+    impl TobogganMapLine {
+        pub fn from_string(input: &str) -> Result<TobogganMapLine, Box<dyn std::error::Error>> {
+            Ok(TobogganMapLine {
+                spaces: input
+                    .chars()
+                    .map(GridSpace::from_char)
+                    .collect::<Result<Vec<GridSpace>, _>>()?,
+            })
+        }
+        pub fn manually_place_toboggan_at(&mut self, toboggan: Toboggan, at: u64) {
+            self.spaces[at as usize] = GridSpace::Me(toboggan);
         }
     }
-
-    pub fn parse_line_to_entry(line: &str) -> Result<Entry, Box<dyn std::error::Error>> {
-        let re = Regex::new("^([0-9]*)-([0-9]*) ([a-zA-Z]): ([a-zA-Z]*)$")?;
-        let caps = re.captures(line).ok_or("Couldn't get captures")?;
-
-        let start = caps
-            .get(1)
-            .ok_or("Couldn't get capture group")?
-            .as_str()
-            .parse::<u64>()?;
-        let end = caps
-            .get(2)
-            .ok_or("Couldn't get capture group")?
-            .as_str()
-            .parse::<u64>()?;
-        let letter = caps
-            .get(3)
-            .ok_or("Couldn't get capture group")?
-            .as_str()
-            .parse::<char>()?;
-        let password = caps.get(4).ok_or("Couldn't get capture group")?.as_str();
-
-        Ok(Entry {
-            policy: Policy { start, end, letter },
-            password: password.into(),
-        })
+    #[derive(Debug)]
+    pub struct TobogganMap {
+        /// This pair represents the number of lines in the input map file
+        ///         (pair.1)
+        /// and the number of columns (pair.0) which is calculated using the
+        ///         Toboggan's slope. The original number of columns
+        ///         (in the input file) is forgotten/ignored after this Map
+        ///         is constructed.
+        ///
+        size: Pair,
+        lines: Vec<TobogganMapLine>,
+    }
+    impl TobogganMap {
+        pub fn from_input(input: String) -> Result<TobogganMap, Box<dyn std::error::Error>> {
+            let mut toboggan_lines = input
+                .lines()
+                .map(TobogganMapLine::from_string)
+                .collect::<Result<Vec<TobogganMapLine>, _>>()?;
+            Ok(TobogganMap {
+                size: Pair(
+                    toboggan_lines.len() as u64,
+                    toboggan_lines[0].spaces.len() as u64,
+                ),
+                lines: toboggan_lines,
+            })
+        }
+        pub fn place_toboggan_with_slope_at(&mut self, slope: Pair, at: Pair) {
+            self.lines[at.1 as usize].manually_place_toboggan_at(Toboggan { slope }, at.0);
+        }
     }
 }
+
+use day_three::TobogganMap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
 
-    let entries = input
-        .lines()
-        .map(authentication::parse_line_to_entry)
-        .collect::<Result<Vec<authentication::Entry>, _>>()?;
-    let valid_entries: Vec<&authentication::Entry> =
-        entries.iter().filter(|entry| entry.is_valid()).collect();
-
-    for entry in &entries {
-        println!("{}", entry.to_string());
-    }
-    println!("Valid entries: {} / {}", valid_entries.len(), entries.len());
+    let mut tmap = TobogganMap::from_input(input)?;
+    tmap.place_toboggan_with_slope_at(day_three::Pair(3, 1), day_three::Pair(0, 0));
+    println!("{:#?}", tmap);
 
     Ok(())
-    //Err(Box::new(myerror::MyError))
 }

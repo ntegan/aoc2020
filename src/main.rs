@@ -45,6 +45,53 @@ mod myerror;
 // Each policy actually decribes two positions in the password.
 // 1 first char, 2 second char, so on.
 // EXACLTY one of these positions must contain the given letter
+//
+//
+// Day 3.1
+// =======
+// Toboggan travel to the airport is easy but not safe.
+// minimal steering and  area is covered in trees -- yikes.
+// Calculate angles that will take me near the fewest trees.
+//
+// Due to local geology, trees only grow on integral coordinates on a grid.
+// Made a map (puzzle input) of visible open squares (.) and trees (#).
+// ..##.......
+// #...#...#..
+// .#....#..#.
+// ..#.#...#.#
+// .#...##..#.
+// ..#.##.....
+// .#.#.#....#
+// .#........#
+// #.##...#...
+// #...##....#
+// .#..#...#.#
+//
+// Due to something I read once about arboreal genetics and biome stability,
+// same pattern repeats to the right many times.
+//
+// ..##.........##.........##.........##.........##.........##.......  --->
+// #...#...#..#...#...#..#...#...#..#...#...#..#...#...#..#...#...#..
+// .#....#..#..#....#..#..#....#..#..#....#..#..#....#..#..#....#..#.
+// ..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#
+// .#...##..#..#...##..#..#...##..#..#...##..#..#...##..#..#...##..#.
+// ..#.##.......#.##.......#.##.......#.##.......#.##.......#.##.....  --->
+// .#.#.#....#.#.#.#....#.#.#.#....#.#.#.#....#.#.#.#....#.#.#.#....#
+// .#........#.#........#.#........#.#........#.#........#.#........#
+// #.##...#...#.##...#...#.##...#...#.##...#...#.##...#...#.##...#...
+// #...##....##...##....##...##....##...##....##...##....##...##....#
+// .#..#...#.#.#..#...#.#.#..#...#.#.#..#...#.#.#..#...#.#.#..#...#.#  --->
+//
+// start on open square in top left, and need to reach the bottom.
+// (below the bottom-most row on the map).
+//
+// toboggan can only follow a few specific slopes, should've chosen the
+// more expensive model that can work with more than just rational numbers.
+//
+// To start, count all trees would encounter for slope right 3, down 1.
+// in this map, traversing would cause to encounter 7 trees.
+//
+// How many trees would encounter with the real map input?
 
 mod authentication {
     use regex::Regex;

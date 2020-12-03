@@ -16,7 +16,7 @@ mod myerror;
 // =======
 // find 3 numbers that meet the same criteria?
 //
-// Day 2.2
+// Day 2.1
 // =======
 // Need t oget to coastal airport. quickest way is via toboggan.
 // North Pole Toboggan Rental Shop owner has bad day, can't log into computers.
@@ -34,6 +34,17 @@ mod myerror;
 // to be valid.
 // 1-3 a means password must contain a [1,3] times.
 // above example 2 passwords are valid.
+//
+//
+// Day 2.2
+// =======
+// wasn't what the Official Toboggan Corporate Authentication System is expecting
+// shopkeeper realizes accidentally explained password policy rules from
+// old job at sled rental place down the street.
+//
+// Each policy actually decribes two positions in the password.
+// 1 first char, 2 second char, so on.
+// EXACLTY one of these positions must contain the given letter
 
 mod authentication {
     use regex::Regex;
@@ -67,12 +78,29 @@ mod authentication {
         /// Ensure the frequency of self.policy.letter in self.password
         /// is in [self.policy.start, self.policy.ent]
         pub fn is_valid(&self) -> bool {
-            let count = self.password.matches(self.policy.letter).count() as u64;
-            std::ops::Range {
-                start: self.policy.start,
-                end: self.policy.end + 1,
+            if self.password.len() < self.policy.end as usize {
+                return false;
             }
-            .contains(&count)
+            let mut value = 0;
+            if self
+                .password
+                .chars()
+                .nth((self.policy.start - 1) as usize)
+                .unwrap()
+                == self.policy.letter
+            {
+                value = value + 1;
+            }
+            if self
+                .password
+                .chars()
+                .nth((self.policy.end - 1) as usize)
+                .unwrap()
+                == self.policy.letter
+            {
+                value = value + 1;
+            }
+            value == 1
         }
     }
 
@@ -114,11 +142,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let valid_entries: Vec<&authentication::Entry> =
         entries.iter().filter(|entry| entry.is_valid()).collect();
 
-    //println!("{}", entries);
     for entry in &entries {
         println!("{}", entry.to_string());
     }
     println!("Valid entries: {} / {}", valid_entries.len(), entries.len());
 
-    Err(Box::new(myerror::MyError))
+    Ok(())
+    //Err(Box::new(myerror::MyError))
 }

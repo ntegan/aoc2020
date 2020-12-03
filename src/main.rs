@@ -93,7 +93,6 @@ mod myerror;
 //
 // How many trees would encounter with the real map input?
 
-
 /// Coordinate system:
 ///     e.g. slope is right 3, down 1
 ///     top left is (0, 0)
@@ -179,6 +178,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut tmap = TobogganMap::from_input(input)?;
     tmap.place_toboggan_with_slope_at(day_three::Pair(3, 1), day_three::Pair(0, 0));
     println!("{:#?}", tmap);
+
+    // TODO: get proper map width by calculating given height + slope
 
     Ok(())
 }

@@ -110,177 +110,232 @@ mod myerror;
 //
 // in above example, slopes would find 2,7,3,4,2 trees
 // multiplied together produces 336
+//
+//
+// Day 4.1
+// =======
+// Arrive at airport yay. Grabbed North Pole Credentials instead of passport!
+// not valid for travel in most of the world.
+//
+// not the only one having problems. long line formed for automatic passport
+// scanners. Delay could upset travel itinerary.
+// Questionable network security, might be able to solve both problems at once.
+//
+// automatic passport scanners slow because having trouble detecting which
+// passp[orts have all required fields.
+// Expected fields:
+// byr
+// iyr
+// eyr
+// hgt
+// hcl
+// ecl
+// pid
+// cid
+// birth yr, issue yr, expiration yr, height, hair color, eye color, passport id,
+// country id
+//
+// pport data validated in batch files (puzzle input).
+// each passporet represented as a sequence of key:fvalue pairs
+// separated by spaces or newlines.
+// passports separated by blank lines.
+// example with 4 passports
+// ```
+// ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
+// byr:1937 iyr:2017 cid:147 hgt:183cm
+//
+// iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884
+// hcl:#cfa07d byr:1929
+//
+// hcl:#ae17e1 iyr:2013
+// eyr:2024
+// ecl:brn pid:760753108 byr:1931
+// hgt:179cm
+//
+// hcl:#cfa07d eyr:2025 pid:166559648
+// iyr:2011 ecl:brn hgt:59in
+// ```
+//
+// first pport valid, all 8 firleds present.
+// second invalid missing height.
+// third only missing field s cid, so looks like north pole cerendials, not pport.
+//
+// surely nobody would mind if you made system temporarily ignore missing cid fields.
+// treat thisas fvalid.
+//
+// 2 valid passports in above example.
+//
+// COUNT the number of valid passports.
+//
 
-/// Coordinate system:
-///     e.g. slope is right 3, down 1
-///     top left is (0, 0)
-///     next point is (3, 1)
-mod day_three {
+mod day_four {
     use crate::myerror;
+    #[derive(Debug)]
+    struct BirthYear(u64);
+    #[derive(Debug)]
+    struct IssueYear(u64);
+    #[derive(Debug)]
+    struct ExpirationYear(u64);
+    #[derive(Debug)]
+    enum Height {
+        Inches(u64),
+        Centimeters(u64),
+    }
+    #[derive(Debug)]
+    struct HairColor(u8, u8, u8);
+    #[derive(Debug)]
+    struct EyeColor(String);
+    #[derive(Debug)]
+    struct PassportId(u64);
+    #[derive(Debug)]
+    struct CountryId(u64);
 
-    #[derive(Debug, Clone, Copy)]
-    pub struct Pair(pub u64, pub u64);
     #[derive(Debug)]
-    struct Toboggan {
-        slope: Pair,
-    }
-    impl Toboggan {
-        pub fn clone_slope(&self) -> Pair {
-            self.slope.clone()
-        }
-    }
-    #[derive(Debug)]
-    enum GridSpace {
-        Me(Toboggan),
-        Open,
-        Tree,
-    }
-    impl GridSpace {
-        pub fn from_char(car: char) -> Result<GridSpace, Box<dyn std::error::Error>> {
-            match car {
-                '.' => Ok(GridSpace::Open),
-                '#' => Ok(GridSpace::Tree),
+    struct KeyValuePair(String, String);
+    impl KeyValuePair {
+        pub fn from_colon_separated_string(
+            string: &str,
+        ) -> Result<KeyValuePair, Box<dyn std::error::Error>> {
+            let parts = string.split(":").collect::<Vec<&str>>();
+            match parts.len() {
+                2 => Ok(KeyValuePair(String::from(parts[0]), String::from(parts[1]))),
                 _ => Err(Box::new(myerror::MyError)),
             }
         }
     }
-    #[derive(Debug)]
-    struct TobogganMapLine {
-        spaces: Vec<GridSpace>,
-    }
-    impl TobogganMapLine {
-        pub fn get_grid_space_at(
-            &self,
-            pos: u64,
-        ) -> Result<&GridSpace, Box<dyn std::error::Error>> {
-            Ok(&self.spaces[pos as usize])
-        }
-        pub fn from_string(input: &str) -> Result<TobogganMapLine, Box<dyn std::error::Error>> {
-            Ok(TobogganMapLine {
-                spaces: input
-                    .chars()
-                    .map(GridSpace::from_char)
-                    .collect::<Result<Vec<GridSpace>, _>>()?,
-            })
-        }
-        pub fn get_width(&self) -> u64 {
-            self.spaces.len() as u64
-        }
-        pub fn manually_place_toboggan_at(&mut self, toboggan: Toboggan, at: u64) {
-            self.spaces[at as usize] = GridSpace::Me(toboggan);
-        }
-    }
-    #[derive(Debug)]
-    pub struct TobogganMap {
-        /// This pair represents the number of lines in the input map file
-        ///         (pair.1)
-        /// and the number of columns (pair.0) which is calculated using the
-        ///         Toboggan's slope. The original number of columns
-        ///         (in the input file) is forgotten/ignored after this Map
-        ///         is constructed.
-        ///
-        size: Pair,
-        lines: Vec<TobogganMapLine>,
-    }
-    impl TobogganMap {
-        pub fn from_input(input: String) -> Result<TobogganMap, Box<dyn std::error::Error>> {
-            let toboggan_lines = input
-                .lines()
-                .map(TobogganMapLine::from_string)
-                .collect::<Result<Vec<TobogganMapLine>, _>>()?;
-            Ok(TobogganMap {
-                size: Pair(
-                    toboggan_lines.len() as u64,
-                    toboggan_lines[0].spaces.len() as u64,
-                ),
-                lines: toboggan_lines,
-            })
-        }
-        pub fn place_toboggan_with_slope_at(&mut self, slope: Pair, at: Pair) {
-            self.lines[at.1 as usize].manually_place_toboggan_at(Toboggan { slope }, at.0);
-        }
-        fn get_grid_space_at_pair(
-            &self,
-            position: &Pair,
-        ) -> Result<&GridSpace, Box<dyn std::error::Error>> {
-            self.lines[position.1 as usize].get_grid_space_at(position.0)
-        }
-        fn get_slope(&self) -> Result<Pair, Box<dyn std::error::Error>> {
-            let mut position = Pair(0, 0);
-            loop {
-                let space = self.get_grid_space_at_pair(&position)?;
-                match space {
-                    GridSpace::Me(tobog) => return Ok(tobog.clone_slope()),
-                    GridSpace::Tree => {}
-                    GridSpace::Open => {}
-                }
-                position.0 = 1;
-                let width = self.lines[0].get_width();
-                if position.0 >= width {
-                    position.0 = position.0 % width;
-                    position.1 = position.1 + 1;
-                }
-                if position.1 >= self.lines.len() as u64 {
-                    break;
-                }
-            }
-            Err(Box::new(myerror::MyError))
-        }
-        pub fn count_trees_would_hit(&self) -> Result<u64, Box<dyn std::error::Error>> {
-            let mut position = Pair(0, 0);
-            let slope = self.get_slope()?;
-            let mut trees = 0;
 
-            loop {
-                let space = self.get_grid_space_at_pair(&position)?;
-                match space {
-                    GridSpace::Me(_me) => {}
-                    GridSpace::Tree => trees = trees + 1,
-                    GridSpace::Open => {}
-                }
-                position.0 = position.0 + slope.0;
-                position.1 = position.1 + slope.1;
-                position.0 = position.0 % self.lines[0].get_width();
-                if position.1 >= self.lines.len() as u64 {
-                    break;
-                }
+    #[derive(Debug)]
+    pub struct Passport {
+        birth_year: BirthYear,
+        issue_year: IssueYear,
+        expiration_year: ExpirationYear,
+        height: Height,
+        hair_color: HairColor,
+        eye_color: EyeColor,
+        passport_id: PassportId,
+        country_id: Option<CountryId>,
+    }
+    impl Passport {
+        fn passport_from_string(
+            string: String,
+        ) -> Result<Option<Passport>, Box<dyn std::error::Error>> {
+            let mut pairs = Vec::new();
+            for passport_item in string.split(" ") {
+                let pair = KeyValuePair::from_colon_separated_string(passport_item)?;
+                pairs.push(pair);
+            }
+            let birth_year = BirthYear(
+                pairs
+                    .iter()
+                    .find(|&pair| pair.0 == "byr")
+                    .ok_or("Couldn't find pair")?
+                    .1
+                    .parse::<u64>()?,
+            );
+            let issue_year = IssueYear(
+                pairs
+                    .iter()
+                    .find(|&pair| pair.0 == "iyr")
+                    .ok_or("Couldn't find pair")?
+                    .1
+                    .parse::<u64>()?,
+            );
+            let expiration_year = ExpirationYear(
+                pairs
+                    .iter()
+                    .find(|&pair| pair.0 == "eyr")
+                    .ok_or("Couldn't find pair")?
+                    .1
+                    .parse::<u64>()?,
+            );
+            let mut height;
+            let heightt = &pairs
+                .iter()
+                .find(|&pair| pair.0 == "hgt")
+                .ok_or("Couldn't find pair")?
+                .1;
+            if heightt.contains("cm") {
+                height = Height::Centimeters(heightt[..heightt.len() - 2].parse::<u64>()?);
+            } else if heightt.contains("inches") {
+                height = Height::Centimeters(heightt[..heightt.len() - 6].parse::<u64>()?);
+            } else {
+                return Err(Box::new(myerror::MyError));
             }
 
-            Ok(trees)
+            let hair_color = &pairs
+                .iter()
+                .find(|&pair| pair.0 == "hcl")
+                .ok_or("Couldn't find pair")?
+                .1;
+            let x = u8::from_str_radix(&hair_color[1..3], 16)?;
+            let y = u8::from_str_radix(&hair_color[3..5], 16)?;
+            let z = u8::from_str_radix(&hair_color[5..7], 16)?;
+            let hair_color = HairColor(x, y, z);
+
+            let eye_color = EyeColor(String::from(
+                &pairs
+                    .iter()
+                    .find(|&pair| pair.0 == "ecl")
+                    .ok_or("Couldn't find pair")?
+                    .1,
+            ));
+
+            let passport_id = PassportId(
+                pairs
+                    .iter()
+                    .find(|&pair| pair.0 == "pid")
+                    .ok_or("Couldn't find pair")?
+                    .1
+                    .parse::<u64>()?,
+            );
+
+            let country_id = match pairs.iter().find(|&pair| pair.0 == "cid") {
+                Some(pair) => Some(CountryId(pair.1.parse::<u64>()?)),
+                None => None,
+            };
+
+            let passport = Passport {
+                birth_year,
+                issue_year,
+                expiration_year,
+                height,
+                hair_color,
+                eye_color,
+                passport_id,
+                country_id,
+            };
+            println!("{:?}", passport);
+            Ok(Some(passport))
+        }
+        pub fn passports_from_string(
+            input: &String,
+        ) -> Result<Vec<Passport>, Box<dyn std::error::Error>> {
+            let passports = input
+                .split("\n\n")
+                .map(|passport_line| {
+                    passport_line
+                        .chars()
+                        .map(|c| match c {
+                            '\n' => ' ',
+                            _ => c,
+                        })
+                        .filter(|c| *c != '\n')
+                        .collect::<String>()
+                })
+                .map(Passport::passport_from_string)
+                .collect::<Result<Vec<Option<Passport>>, _>>()?;
+            Ok(passports
+                .into_iter()
+                .filter(|f| f.is_some())
+                .map(|f| f.unwrap())
+                .collect::<Vec<Passport>>())
         }
     }
 }
 
-use day_three::TobogganMap;
-
+use day_four::Passport;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
-
-    let slopes = vec![
-        day_three::Pair(1, 1),
-        day_three::Pair(3, 1),
-        day_three::Pair(5, 1),
-        day_three::Pair(7, 1),
-        day_three::Pair(1, 2),
-    ];
-
-    let mut answers = Vec::new();
-
-    for slope in slopes {
-        let mut tmap = TobogganMap::from_input(input.clone())?;
-        tmap.place_toboggan_with_slope_at(slope, day_three::Pair(0, 0));
-
-        let trees = tmap.count_trees_would_hit()?;
-        answers.push(trees);
-    }
-    let mut total = 1;
-    for answer in answers {
-        println!("Trees: {}", answer);
-        total = total * answer;
-    }
-    println!("Answer: {}", total);
-
-    // TODO: get proper map width by calculating given height + slope
-
+    let passports = Passport::passports_from_string(&input)?;
     Ok(())
 }

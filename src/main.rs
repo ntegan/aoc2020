@@ -126,6 +126,12 @@ mod day_three {
         spaces: Vec<GridSpace>,
     }
     impl TobogganMapLine {
+        pub fn get_grid_space_at(
+            &self,
+            pos: u64,
+        ) -> Result<&GridSpace, Box<dyn std::error::Error>> {
+            Ok(&self.spaces[pos as usize])
+        }
         pub fn from_string(input: &str) -> Result<TobogganMapLine, Box<dyn std::error::Error>> {
             Ok(TobogganMapLine {
                 spaces: input
@@ -133,6 +139,9 @@ mod day_three {
                     .map(GridSpace::from_char)
                     .collect::<Result<Vec<GridSpace>, _>>()?,
             })
+        }
+        pub fn get_width(&self) -> u64 {
+            self.spaces.len() as u64
         }
         pub fn manually_place_toboggan_at(&mut self, toboggan: Toboggan, at: u64) {
             self.spaces[at as usize] = GridSpace::Me(toboggan);
@@ -152,7 +161,7 @@ mod day_three {
     }
     impl TobogganMap {
         pub fn from_input(input: String) -> Result<TobogganMap, Box<dyn std::error::Error>> {
-            let mut toboggan_lines = input
+            let toboggan_lines = input
                 .lines()
                 .map(TobogganMapLine::from_string)
                 .collect::<Result<Vec<TobogganMapLine>, _>>()?;
@@ -167,6 +176,34 @@ mod day_three {
         pub fn place_toboggan_with_slope_at(&mut self, slope: Pair, at: Pair) {
             self.lines[at.1 as usize].manually_place_toboggan_at(Toboggan { slope }, at.0);
         }
+        fn get_grid_space_at_pair(
+            &self,
+            position: &Pair,
+        ) -> Result<&GridSpace, Box<dyn std::error::Error>> {
+            self.lines[position.1 as usize].get_grid_space_at(position.0)
+        }
+        pub fn count_trees_would_hit(&self) -> Result<u64, Box<dyn std::error::Error>> {
+            let mut position = Pair(0, 0);
+            let slope = Pair(3, 1);
+            let mut trees = 0;
+
+            loop {
+                let space = self.get_grid_space_at_pair(&position)?;
+                match space {
+                    GridSpace::Me(_me) => {}
+                    GridSpace::Tree => trees = trees + 1,
+                    GridSpace::Open => {}
+                }
+                position.0 = position.0 + slope.0;
+                position.1 = position.1 + slope.1;
+                position.0 = position.0 % self.lines[0].get_width();
+                if position.1 >= self.lines.len() as u64 {
+                    break;
+                }
+            }
+
+            Ok(trees)
+        }
     }
 }
 
@@ -177,7 +214,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut tmap = TobogganMap::from_input(input)?;
     tmap.place_toboggan_with_slope_at(day_three::Pair(3, 1), day_three::Pair(0, 0));
-    println!("{:#?}", tmap);
+
+    let trees = tmap.count_trees_would_hit()?;
+    println!("Got trees: {}", trees);
 
     // TODO: get proper map width by calculating given height + slope
 

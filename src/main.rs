@@ -260,15 +260,27 @@ mod day_four {
                 return Err(Box::new(myerror::MyError));
             }
 
-            let hair_color = &pairs
+            let hair_colorr = &pairs
                 .iter()
                 .find(|&pair| pair.0 == "hcl")
                 .ok_or("Couldn't find pair")?
                 .1;
-            let x = u8::from_str_radix(&hair_color[1..3], 16)?;
-            let y = u8::from_str_radix(&hair_color[3..5], 16)?;
-            let z = u8::from_str_radix(&hair_color[5..7], 16)?;
-            let hair_color = HairColor(x, y, z);
+            let hair_color;
+            match hair_colorr.len() {
+                6 => {
+                    let x = u8::from_str_radix(&hair_colorr[0..2], 16)?;
+                    let y = u8::from_str_radix(&hair_colorr[2..4], 16)?;
+                    let z = u8::from_str_radix(&hair_colorr[4..6], 16)?;
+                    hair_color = HairColor(x, y, z);
+                }
+                7 => {
+                    let x = u8::from_str_radix(&hair_colorr[1..3], 16)?;
+                    let y = u8::from_str_radix(&hair_colorr[3..5], 16)?;
+                    let z = u8::from_str_radix(&hair_colorr[5..7], 16)?;
+                    hair_color = HairColor(x, y, z);
+                }
+                _ => hair_color = HairColor(0, 0, 0),
+            }
 
             let eye_color = EyeColor(String::from(
                 &pairs
@@ -307,9 +319,12 @@ mod day_four {
         pub fn passports_from_string(
             input: &String,
         ) -> Result<Vec<Passport>, Box<dyn std::error::Error>> {
+            let mut f = 0;
             let passports = input
                 .split("\n\n")
                 .map(|passport_line| {
+                    println!("Line: {}\n{}", f, passport_line);
+                    f = f + 1;
                     passport_line
                         .chars()
                         .map(|c| match c {
@@ -320,9 +335,20 @@ mod day_four {
                         .collect::<String>()
                 })
                 .map(Passport::passport_from_string)
-                .filter(|f| f.is_ok())
-                .collect::<Result<Vec<Passport>, _>>()?;
-            Ok(passports)
+                .collect::<Vec<Result<Passport, _>>>();
+            let mut i = 0;
+            for pp in &passports {
+                match pp {
+                    Ok(_) => {
+                        println!("{}: OK", i);
+                    }
+                    Err(_) => {
+                        println!("{}: Err", i);
+                    }
+                }
+                i = i + 1;
+            }
+            Err(Box::new(myerror::MyError))
         }
     }
 }

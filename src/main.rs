@@ -92,6 +92,24 @@ mod myerror;
 // in this map, traversing would cause to encounter 7 trees.
 //
 // How many trees would encounter with the real map input?
+//
+//
+// Day 3.2
+// =======
+// now to check the rest of the slopes.
+// need to minimize the probability of a sudden arboreal stop.
+//
+// determine number of trees would encounter for each of following slopes
+//
+// right    down
+// 1        1
+// 3        1
+// 5        1
+// 7        1
+// 1        2
+//
+// in above example, slopes would find 2,7,3,4,2 trees
+// multiplied together produces 336
 
 /// Coordinate system:
 ///     e.g. slope is right 3, down 1
@@ -100,11 +118,16 @@ mod myerror;
 mod day_three {
     use crate::myerror;
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone, Copy)]
     pub struct Pair(pub u64, pub u64);
     #[derive(Debug)]
     struct Toboggan {
         slope: Pair,
+    }
+    impl Toboggan {
+        pub fn clone_slope(&self) -> Pair {
+            self.slope.clone()
+        }
     }
     #[derive(Debug)]
     enum GridSpace {
@@ -182,9 +205,30 @@ mod day_three {
         ) -> Result<&GridSpace, Box<dyn std::error::Error>> {
             self.lines[position.1 as usize].get_grid_space_at(position.0)
         }
+        fn get_slope(&self) -> Result<Pair, Box<dyn std::error::Error>> {
+            let mut position = Pair(0, 0);
+            loop {
+                let space = self.get_grid_space_at_pair(&position)?;
+                match space {
+                    GridSpace::Me(tobog) => return Ok(tobog.clone_slope()),
+                    GridSpace::Tree => {}
+                    GridSpace::Open => {}
+                }
+                position.0 = 1;
+                let width = self.lines[0].get_width();
+                if position.0 >= width {
+                    position.0 = position.0 % width;
+                    position.1 = position.1 + 1;
+                }
+                if position.1 >= self.lines.len() as u64 {
+                    break;
+                }
+            }
+            Err(Box::new(myerror::MyError))
+        }
         pub fn count_trees_would_hit(&self) -> Result<u64, Box<dyn std::error::Error>> {
             let mut position = Pair(0, 0);
-            let slope = Pair(3, 1);
+            let slope = self.get_slope()?;
             let mut trees = 0;
 
             loop {
@@ -212,11 +256,29 @@ use day_three::TobogganMap;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
 
-    let mut tmap = TobogganMap::from_input(input)?;
-    tmap.place_toboggan_with_slope_at(day_three::Pair(3, 1), day_three::Pair(0, 0));
+    let slopes = vec![
+        day_three::Pair(1, 1),
+        day_three::Pair(3, 1),
+        day_three::Pair(5, 1),
+        day_three::Pair(7, 1),
+        day_three::Pair(1, 2),
+    ];
 
-    let trees = tmap.count_trees_would_hit()?;
-    println!("Got trees: {}", trees);
+    let mut answers = Vec::new();
+
+    for slope in slopes {
+        let mut tmap = TobogganMap::from_input(input.clone())?;
+        tmap.place_toboggan_with_slope_at(slope, day_three::Pair(0, 0));
+
+        let trees = tmap.count_trees_would_hit()?;
+        answers.push(trees);
+    }
+    let mut total = 1;
+    for answer in answers {
+        println!("Trees: {}", answer);
+        total = total * answer;
+    }
+    println!("Answer: {}", total);
 
     // TODO: get proper map width by calculating given height + slope
 

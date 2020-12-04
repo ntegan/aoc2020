@@ -216,9 +216,7 @@ mod day_four {
         country_id: Option<CountryId>,
     }
     impl Passport {
-        fn passport_from_string(
-            string: String,
-        ) -> Result<Option<Passport>, Box<dyn std::error::Error>> {
+        fn passport_from_string(string: String) -> Result<Passport, Box<dyn std::error::Error>> {
             let mut pairs = Vec::new();
             for passport_item in string.split(" ") {
                 let pair = KeyValuePair::from_colon_separated_string(passport_item)?;
@@ -248,7 +246,7 @@ mod day_four {
                     .1
                     .parse::<u64>()?,
             );
-            let mut height;
+            let height;
             let heightt = &pairs
                 .iter()
                 .find(|&pair| pair.0 == "hgt")
@@ -257,7 +255,7 @@ mod day_four {
             if heightt.contains("cm") {
                 height = Height::Centimeters(heightt[..heightt.len() - 2].parse::<u64>()?);
             } else if heightt.contains("inches") {
-                height = Height::Centimeters(heightt[..heightt.len() - 6].parse::<u64>()?);
+                height = Height::Inches(heightt[..heightt.len() - 6].parse::<u64>()?);
             } else {
                 return Err(Box::new(myerror::MyError));
             }
@@ -304,8 +302,7 @@ mod day_four {
                 passport_id,
                 country_id,
             };
-            println!("{:?}", passport);
-            Ok(Some(passport))
+            Ok(passport)
         }
         pub fn passports_from_string(
             input: &String,
@@ -323,12 +320,9 @@ mod day_four {
                         .collect::<String>()
                 })
                 .map(Passport::passport_from_string)
-                .collect::<Result<Vec<Option<Passport>>, _>>()?;
-            Ok(passports
-                .into_iter()
-                .filter(|f| f.is_some())
-                .map(|f| f.unwrap())
-                .collect::<Vec<Passport>>())
+                .filter(|f| f.is_ok())
+                .collect::<Result<Vec<Passport>, _>>()?;
+            Ok(passports)
         }
     }
 }
@@ -337,5 +331,6 @@ use day_four::Passport;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
     let passports = Passport::passports_from_string(&input)?;
+    println!("Got passports {}", passports.len());
     Ok(())
 }

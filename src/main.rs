@@ -167,202 +167,66 @@ mod myerror;
 //
 // COUNT the number of valid passports.
 //
-
-mod day_four {
-    use crate::myerror;
-    #[derive(Debug)]
-    struct BirthYear(u64);
-    #[derive(Debug)]
-    struct IssueYear(u64);
-    #[derive(Debug)]
-    struct ExpirationYear(u64);
-    #[derive(Debug)]
-    enum Height {
-        Inches(u64),
-        Centimeters(u64),
-    }
-    #[derive(Debug)]
-    struct HairColor(u8, u8, u8);
-    #[derive(Debug)]
-    struct EyeColor(String);
-    #[derive(Debug)]
-    struct PassportId(u64);
-    #[derive(Debug)]
-    struct CountryId(u64);
-
-    #[derive(Debug)]
-    struct KeyValuePair(String, String);
-    impl KeyValuePair {
-        pub fn from_colon_separated_string(
-            string: &str,
-        ) -> Result<KeyValuePair, Box<dyn std::error::Error>> {
-            let parts = string.split(":").collect::<Vec<&str>>();
-            match parts.len() {
-                2 => Ok(KeyValuePair(String::from(parts[0]), String::from(parts[1]))),
-                _ => Err(Box::new(myerror::MyError)),
-            }
-        }
-    }
-
-    #[derive(Debug)]
-    pub struct Passport {
-        birth_year: BirthYear,
-        issue_year: IssueYear,
-        expiration_year: ExpirationYear,
-        height: Height,
-        hair_color: HairColor,
-        eye_color: EyeColor,
-        passport_id: PassportId,
-        country_id: Option<CountryId>,
-    }
-    impl Passport {
-        fn passport_from_string(string: String) -> Result<Passport, Box<dyn std::error::Error>> {
-            let mut pairs = Vec::new();
-            for passport_item in string.split(" ") {
-                let pair = KeyValuePair::from_colon_separated_string(passport_item)?;
-                pairs.push(pair);
-            }
-            let birth_year = BirthYear(
-                pairs
-                    .iter()
-                    .find(|&pair| pair.0 == "byr")
-                    .ok_or("Couldn't find pair")?
-                    .1
-                    .parse::<u64>()?,
-            );
-            let issue_year = IssueYear(
-                pairs
-                    .iter()
-                    .find(|&pair| pair.0 == "iyr")
-                    .ok_or("Couldn't find pair")?
-                    .1
-                    .parse::<u64>()?,
-            );
-            let expiration_year = ExpirationYear(
-                pairs
-                    .iter()
-                    .find(|&pair| pair.0 == "eyr")
-                    .ok_or("Couldn't find pair")?
-                    .1
-                    .parse::<u64>()?,
-            );
-            let height;
-            let heightt = &pairs
-                .iter()
-                .find(|&pair| pair.0 == "hgt")
-                .ok_or("Couldn't find pair")?
-                .1;
-            if heightt.contains("cm") {
-                height = Height::Centimeters(heightt[..heightt.len() - 2].parse::<u64>()?);
-            } else if heightt.contains("inches") {
-                height = Height::Inches(heightt[..heightt.len() - 6].parse::<u64>()?);
-            } else {
-                return Err(Box::new(myerror::MyError));
-            }
-
-            let hair_colorr = &pairs
-                .iter()
-                .find(|&pair| pair.0 == "hcl")
-                .ok_or("Couldn't find pair")?
-                .1;
-            let hair_color;
-            match hair_colorr.len() {
-                6 => {
-                    let x = u8::from_str_radix(&hair_colorr[0..2], 16)?;
-                    let y = u8::from_str_radix(&hair_colorr[2..4], 16)?;
-                    let z = u8::from_str_radix(&hair_colorr[4..6], 16)?;
-                    hair_color = HairColor(x, y, z);
-                }
-                7 => {
-                    let x = u8::from_str_radix(&hair_colorr[1..3], 16)?;
-                    let y = u8::from_str_radix(&hair_colorr[3..5], 16)?;
-                    let z = u8::from_str_radix(&hair_colorr[5..7], 16)?;
-                    hair_color = HairColor(x, y, z);
-                }
-                _ => hair_color = HairColor(0, 0, 0),
-            }
-
-            let eye_color = EyeColor(String::from(
-                &pairs
-                    .iter()
-                    .find(|&pair| pair.0 == "ecl")
-                    .ok_or("Couldn't find pair")?
-                    .1,
-            ));
-
-            let passport_id = PassportId(
-                pairs
-                    .iter()
-                    .find(|&pair| pair.0 == "pid")
-                    .ok_or("Couldn't find pair")?
-                    .1
-                    .parse::<u64>()?,
-            );
-
-            let country_id = match pairs.iter().find(|&pair| pair.0 == "cid") {
-                Some(pair) => Some(CountryId(pair.1.parse::<u64>()?)),
-                None => None,
-            };
-
-            let passport = Passport {
-                birth_year,
-                issue_year,
-                expiration_year,
-                height,
-                hair_color,
-                eye_color,
-                passport_id,
-                country_id,
-            };
-            Ok(passport)
-        }
-        pub fn passports_from_string(
-            input: &String,
-        ) -> Result<Vec<Passport>, Box<dyn std::error::Error>> {
-            let mut f = 0;
-            let passports = input
-                .split("\n\n")
-                .map(|passport_line| {
-                    f = f + 1;
-                    passport_line
-                        .chars()
-                        .map(|c| match c {
-                            '\n' => ' ',
-                            _ => c,
-                        })
-                        .filter(|c| *c != '\n')
-                        .collect::<String>()
-                })
-                .map(Passport::passport_from_string)
-                .collect::<Vec<Result<Passport, _>>>();
-            for i in 0..passports.len() {
-                match &passports[i] {
-                    Ok(f) => {}
-                    Err(e) => println!("{}: {:?}", i, e),
-                }
-            }
-            let mut i = 0;
-            for pp in &passports {
-                continue;
-                match pp {
-                    Ok(_) => {
-                        println!("{}: OK", i);
-                    }
-                    Err(_) => {
-                        println!("{}: Err", i);
-                    }
-                }
-                i = i + 1;
-            }
-            Err(Box::new(myerror::MyError))
-        }
-    }
-}
-
-use day_four::Passport;
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input = input::read_until_eof()?;
-    let passports = Passport::passports_from_string(&input)?;
-    println!("Got passports {}", passports.len());
-    Ok(())
-}
+//
+//
+// Day 5.1
+// =======
+// Binary Boarding
+//
+// board plane discover new problem, dropped boarding pass.
+// Don't know what seat is mine and flight attendants busy
+//
+// quick program use phone's camera scan all nearby boarding passes
+// (puzzle input).
+//
+// airline doesn't use zones or gorups it uses binary space partitioning
+// to seat people.
+//
+// A seat might be specified like `FBFBBFFRLR` where f front,back,left,right.
+//
+// First 7 chars either F or B. specify exactly 1 of the 128 rows
+// on the plane (0-127).
+// Each letter tells which half of a region the given seat is in.
+// start with whole list of rows. First letter indicates whetehr
+// seat in front (0-63) or back (64-127).
+// next letter indicates which half of that region the seat is in,...
+// until left with exactly one row.
+//
+// e.g. consider just first seven letters of
+// `FBFBBFFRLR`
+// start consider whole range 0-127,
+// F lower half, keep 0-63
+// B upper 32-63,
+// F 32-47
+// B 40-47
+// B 44-47
+// F 44-46
+// final F keeps lower ro44
+//
+// last three letters withe L or R specify one of the 8columns of seats
+// on that plane (0-7)
+// same process as above but this time with only 3 steps.
+// l lower, right upper.
+// 0-7
+// 4-7
+// 4-5
+// R upper col 5
+//
+// => row 44 col 5
+//
+// each seat unique seat id (row * 8 + column)
+//
+// this e.g. 44 * 8 + 5 = 357
+//
+// here are some other boarding passes
+//     BFFFBBFRRR: row 70, column 7, seat ID 567.
+//     FFFBBBFRRR: row 14, column 7, seat ID 119.
+//     BBFFBBFRLL: row 102, column 4, seat ID 820.
+//     o
+// 
+// What is the highest seat ID on a boarding pass?
+//
+//
+//
+//
+//

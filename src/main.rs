@@ -225,6 +225,20 @@ mod myerror;
 //     o
 //
 // What is the highest seat ID on a boarding pass?
+//
+//
+// Day 5.2
+// =======
+// fasten seat belt sign on, time  to find seat.
+// completely full flight, so seat should be only missing
+// boarding pass in your list.
+//
+// but a catch: some seats at very front and back of plane
+// don't exist on this aircraft so they'll be missing
+// from the list as well.
+//
+// my  seat wasn't at the ver front or back though.
+// my seat ID + 1 and - 1 will be in the list
 
 mod day_five {
     use crate::myerror;
@@ -252,7 +266,7 @@ mod day_five {
     }
     impl BoardingPass {
         pub fn calculate_seat_id(&self) -> u64 {
-            (self.row.0 as u64 ) * 8 + (self.column.0 as u64)
+            (self.row.0 as u64) * 8 + (self.column.0 as u64)
         }
         pub fn from_slice(slice: &str) -> Result<BoardingPass, Box<dyn std::error::Error>> {
             if slice.len() != BOARDING_PASS_STRING_LENGTH {
@@ -294,15 +308,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let lines = input.lines().collect::<Vec<&str>>();
 
-    let mut max = 0;
+    let mut seat_ids = Vec::new();
     for line in lines {
         let pass = day_five::BoardingPass::from_slice(line)?;
         let seat_id = pass.calculate_seat_id();
-        if seat_id > max {
-            max = seat_id;
+        seat_ids.push(seat_id);
+    }
+    seat_ids.sort();
+    println!("{:#?}", seat_ids);
+
+    // 75 to 864
+
+    for i in 75..865 {
+        if !seat_ids.contains(&i) {
+            println!("Don't have: {}", i);
         }
     }
 
-    print!("max: {}", max);
     Ok(())
 }

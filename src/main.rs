@@ -323,7 +323,6 @@ mod day_four {
             let passports = input
                 .split("\n\n")
                 .map(|passport_line| {
-                    println!("Line: {}\n{}", f, passport_line);
                     f = f + 1;
                     passport_line
                         .chars()
@@ -336,8 +335,15 @@ mod day_four {
                 })
                 .map(Passport::passport_from_string)
                 .collect::<Vec<Result<Passport, _>>>();
+            for i in 0..passports.len() {
+                match &passports[i] {
+                    Ok(f) => {}
+                    Err(e) => println!("{}: {:?}", i, e),
+                }
+            }
             let mut i = 0;
             for pp in &passports {
+                continue;
                 match pp {
                     Ok(_) => {
                         println!("{}: OK", i);

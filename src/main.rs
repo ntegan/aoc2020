@@ -223,10 +223,86 @@ mod myerror;
 //     FFFBBBFRRR: row 14, column 7, seat ID 119.
 //     BBFFBBFRLL: row 102, column 4, seat ID 820.
 //     o
-// 
+//
 // What is the highest seat ID on a boarding pass?
-//
-//
-//
-//
-//
+
+mod day_five {
+    use crate::myerror;
+
+    // BFFFBBFRRR
+    const BOARDING_PASS_STRING_LENGTH: usize = 10;
+
+    struct Row(i8);
+    struct Column(i8);
+    pub struct BoardingPass {
+        row: Row,
+        column: Column,
+    }
+    fn range_lower_half(range: std::ops::Range<u64>) -> std::ops::Range<u64> {
+        std::ops::Range {
+            start: range.start,
+            end: range.start + (range.end - range.start) / 2,
+        }
+    }
+    fn range_upper_half(range: std::ops::Range<u64>) -> std::ops::Range<u64> {
+        std::ops::Range {
+            start: range.start + (range.end - range.start) / 2,
+            end: range.end,
+        }
+    }
+    impl BoardingPass {
+        pub fn calculate_seat_id(&self) -> u64 {
+            (self.row.0 as u64 ) * 8 + (self.column.0 as u64)
+        }
+        pub fn from_slice(slice: &str) -> Result<BoardingPass, Box<dyn std::error::Error>> {
+            if slice.len() != BOARDING_PASS_STRING_LENGTH {
+                return Err(Box::new(myerror::MyError));
+            }
+            let mut row_range = std::ops::Range { start: 0, end: 128 };
+            for i in 0..(BOARDING_PASS_STRING_LENGTH - 3) {
+                match slice.chars().nth(i).unwrap() {
+                    'F' => row_range = range_lower_half(row_range),
+                    'B' => row_range = range_upper_half(row_range),
+                    _ => {
+                        return Err(Box::new(myerror::MyError));
+                    }
+                }
+            }
+            let row = row_range.start;
+            let mut col_range = std::ops::Range { start: 0, end: 8 };
+            for i in (BOARDING_PASS_STRING_LENGTH - 3)..slice.len() {
+                match slice.chars().nth(i).unwrap() {
+                    'L' => col_range = range_lower_half(col_range),
+                    'R' => col_range = range_upper_half(col_range),
+                    _ => {
+                        return Err(Box::new(myerror::MyError));
+                    }
+                }
+            }
+            let col = col_range.start;
+
+            Ok(BoardingPass {
+                row: Row(row as i8),
+                column: Column(col as i8),
+            })
+        }
+    }
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let input = input::read_until_eof()?;
+
+    let lines = input.lines().collect::<Vec<&str>>();
+
+    let mut max = 0;
+    for line in lines {
+        let pass = day_five::BoardingPass::from_slice(line)?;
+        let seat_id = pass.calculate_seat_id();
+        if seat_id > max {
+            max = seat_id;
+        }
+    }
+
+    print!("max: {}", max);
+    Ok(())
+}

@@ -239,66 +239,78 @@ mod myerror;
 //
 // my  seat wasn't at the ver front or back though.
 // my seat ID + 1 and - 1 will be in the list
+//
+//
+// Day 6.1
+// =======
+// Flight approaches regional airport where switch to much larger plane.
+// Customs declaration forms distributed to the passengers.
+//
+// Form asks series of 26 yes-or-no questions marked `a` through `z`.
+// Need to identify the questions for which *anyone* in the group answers
+// "yes". Since group is just you, doesn't take very long.
+//
+// Helping person next to me.
+// For each person in their group, write down Q's for which tehy answer yes.
+// e.g.
+// ```
+// abcx
+// abcy
+// abcz
+// ```
+// In this group there are 6 questiosn (abcxyz) for which someone answered
+// yes.
+//
+// Another group asks for help and eventually collected answers from every
+// group (puzzle input). Each group answers separated by a blank line.
+// W/in each group, each person's answers on a single line.
+//
+// For each group count questions for which anyone answered yes.
+// What is the sum of these counts?
+//
 
-mod day_five {
-    use crate::myerror;
-
-    // BFFFBBFRRR
-    const BOARDING_PASS_STRING_LENGTH: usize = 10;
-
-    struct Row(i8);
-    struct Column(i8);
-    pub struct BoardingPass {
-        row: Row,
-        column: Column,
+mod day_six {
+    #[derive(Debug)]
+    pub struct Person {
+        affirmative_questions: Vec<char>,
     }
-    fn range_lower_half(range: std::ops::Range<u64>) -> std::ops::Range<u64> {
-        std::ops::Range {
-            start: range.start,
-            end: range.start + (range.end - range.start) / 2,
-        }
-    }
-    fn range_upper_half(range: std::ops::Range<u64>) -> std::ops::Range<u64> {
-        std::ops::Range {
-            start: range.start + (range.end - range.start) / 2,
-            end: range.end,
-        }
-    }
-    impl BoardingPass {
-        pub fn calculate_seat_id(&self) -> u64 {
-            (self.row.0 as u64) * 8 + (self.column.0 as u64)
-        }
-        pub fn from_slice(slice: &str) -> Result<BoardingPass, Box<dyn std::error::Error>> {
-            if slice.len() != BOARDING_PASS_STRING_LENGTH {
-                return Err(Box::new(myerror::MyError));
+    impl Person {
+        pub fn from_slice(string: &str) -> Person {
+            let mut vec = Vec::new();
+            for charr in string.chars() {
+                vec.push(charr);
             }
-            let mut row_range = std::ops::Range { start: 0, end: 128 };
-            for i in 0..(BOARDING_PASS_STRING_LENGTH - 3) {
-                match slice.chars().nth(i).unwrap() {
-                    'F' => row_range = range_lower_half(row_range),
-                    'B' => row_range = range_upper_half(row_range),
-                    _ => {
-                        return Err(Box::new(myerror::MyError));
-                    }
+            Person {
+                affirmative_questions: vec,
+            }
+        }
+        pub fn get_questions(&self) -> &Vec<char> {
+            &self.affirmative_questions
+        }
+    }
+    #[derive(Debug)]
+    pub struct Group {
+        people: Vec<Person>,
+    }
+    impl Group {
+        pub fn from_slice(string: &str) -> Group {
+            let mut vec = Vec::new();
+            for charr in string.split("\n") {
+                vec.push(Person::from_slice(charr));
+            }
+            Group { people: vec }
+        }
+        pub fn count_questions_answered(&self) -> u64 {
+            let mut total_questions = Vec::new();
+            for person in &self.people {
+                for question in person.get_questions() {
+                    total_questions.push(question);
                 }
             }
-            let row = row_range.start;
-            let mut col_range = std::ops::Range { start: 0, end: 8 };
-            for i in (BOARDING_PASS_STRING_LENGTH - 3)..slice.len() {
-                match slice.chars().nth(i).unwrap() {
-                    'L' => col_range = range_lower_half(col_range),
-                    'R' => col_range = range_upper_half(col_range),
-                    _ => {
-                        return Err(Box::new(myerror::MyError));
-                    }
-                }
-            }
-            let col = col_range.start;
+            total_questions.sort();
+            total_questions.dedup();
 
-            Ok(BoardingPass {
-                row: Row(row as i8),
-                column: Column(col as i8),
-            })
+            total_questions.len() as u64
         }
     }
 }
@@ -306,24 +318,14 @@ mod day_five {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
 
-    let lines = input.lines().collect::<Vec<&str>>();
-
-    let mut seat_ids = Vec::new();
-    for line in lines {
-        let pass = day_five::BoardingPass::from_slice(line)?;
-        let seat_id = pass.calculate_seat_id();
-        seat_ids.push(seat_id);
+    let mut total = 0;
+    for line in input.split("\n\n") {
+        let group = day_six::Group::from_slice(line.trim());
+        let f = group.count_questions_answered();
+        total = total + f;
     }
-    seat_ids.sort();
-    println!("{:#?}", seat_ids);
 
-    // 75 to 864
-
-    for i in 75..865 {
-        if !seat_ids.contains(&i) {
-            println!("Don't have: {}", i);
-        }
-    }
+    println!("{}", total);
 
     Ok(())
 }

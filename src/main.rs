@@ -300,17 +300,28 @@ mod day_six {
             }
             Group { people: vec }
         }
-        pub fn count_questions_answered(&self) -> u64 {
-            let mut total_questions = Vec::new();
-            for person in &self.people {
-                for question in person.get_questions() {
-                    total_questions.push(question);
+        pub fn count_unanimous_affirmatives(&self) -> u64 {
+            // Get the first person's questions
+            let mut unanimous_affirmatives = Vec::new();
+            // TODO
+            let mut remove_from = Vec::new();
+            for question in self.people[0].get_questions() {
+                unanimous_affirmatives.push(question);
+            }
+            for i in  1..self.people.len()  {
+                for question in &unanimous_affirmatives {
+                    if !self.people[i].get_questions().contains(question) {
+                        remove_from.push(question);
+                    }
                 }
             }
-            total_questions.sort();
-            total_questions.dedup();
-
-            total_questions.len() as u64
+            remove_from.sort();
+            remove_from.dedup();
+            let unanimous_affirmatives = unanimous_affirmatives
+                .iter()
+                .filter(|x| !remove_from.contains(x))
+                .collect::<Vec<&&char>>();
+            unanimous_affirmatives.len() as u64
         }
     }
 }
@@ -321,7 +332,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut total = 0;
     for line in input.split("\n\n") {
         let group = day_six::Group::from_slice(line.trim());
-        let f = group.count_questions_answered();
+        let f = group.count_unanimous_affirmatives();
         total = total + f;
     }
 

@@ -1,384 +1,61 @@
 mod input;
 mod myerror;
 
-// Day 1.1
-// =======
-// 5th year of AOC. Vacation at nice resort on tropical island.
-// has its own currency and is entirely cash-only!
-//
-// Before leave, need to fix expense report (puzzle input).
-// apparently it isn't quite adding up.
-//
-// Need to find two entries that sum up to 2020 and then multiply
-// those numbers together
-//
-// Day 1.2
-// =======
-// find 3 numbers that meet the same criteria?
-//
-// Day 2.1
-// =======
-// Need t oget to coastal airport. quickest way is via toboggan.
-// North Pole Toboggan Rental Shop owner has bad day, can't log into computers.
-// password database corupted.
-//
-// debug problem given list of passwords (puzzle input) according to corrupted
-// database and corporate policy when that password was set
-//
-// e.g.
-// 1-3 a: abcde
-// 1-3 b: cdefg
-// 2-9 c: ccccccccc
-//
-// policy indicates lowest and highest frequency a letter must appear for pass
-// to be valid.
-// 1-3 a means password must contain a [1,3] times.
-// above example 2 passwords are valid.
-//
-//
-// Day 2.2
-// =======
-// wasn't what the Official Toboggan Corporate Authentication System is expecting
-// shopkeeper realizes accidentally explained password policy rules from
-// old job at sled rental place down the street.
-//
-// Each policy actually decribes two positions in the password.
-// 1 first char, 2 second char, so on.
-// EXACLTY one of these positions must contain the given letter
-//
-//
-// Day 3.1
-// =======
-// Toboggan travel to the airport is easy but not safe.
-// minimal steering and  area is covered in trees -- yikes.
-// Calculate angles that will take me near the fewest trees.
-//
-// Due to local geology, trees only grow on integral coordinates on a grid.
-// Made a map (puzzle input) of visible open squares (.) and trees (#).
-// ..##.......
-// #...#...#..
-// .#....#..#.
-// ..#.#...#.#
-// .#...##..#.
-// ..#.##.....
-// .#.#.#....#
-// .#........#
-// #.##...#...
-// #...##....#
-// .#..#...#.#
-//
-// Due to something I read once about arboreal genetics and biome stability,
-// same pattern repeats to the right many times.
-//
-// ..##.........##.........##.........##.........##.........##.......  --->
-// #...#...#..#...#...#..#...#...#..#...#...#..#...#...#..#...#...#..
-// .#....#..#..#....#..#..#....#..#..#....#..#..#....#..#..#....#..#.
-// ..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#..#.#...#.#
-// .#...##..#..#...##..#..#...##..#..#...##..#..#...##..#..#...##..#.
-// ..#.##.......#.##.......#.##.......#.##.......#.##.......#.##.....  --->
-// .#.#.#....#.#.#.#....#.#.#.#....#.#.#.#....#.#.#.#....#.#.#.#....#
-// .#........#.#........#.#........#.#........#.#........#.#........#
-// #.##...#...#.##...#...#.##...#...#.##...#...#.##...#...#.##...#...
-// #...##....##...##....##...##....##...##....##...##....##...##....#
-// .#..#...#.#.#..#...#.#.#..#...#.#.#..#...#.#.#..#...#.#.#..#...#.#  --->
-//
-// start on open square in top left, and need to reach the bottom.
-// (below the bottom-most row on the map).
-//
-// toboggan can only follow a few specific slopes, should've chosen the
-// more expensive model that can work with more than just rational numbers.
-//
-// To start, count all trees would encounter for slope right 3, down 1.
-// in this map, traversing would cause to encounter 7 trees.
-//
-// How many trees would encounter with the real map input?
-//
-//
-// Day 3.2
-// =======
-// now to check the rest of the slopes.
-// need to minimize the probability of a sudden arboreal stop.
-//
-// determine number of trees would encounter for each of following slopes
-//
-// right    down
-// 1        1
-// 3        1
-// 5        1
-// 7        1
-// 1        2
-//
-// in above example, slopes would find 2,7,3,4,2 trees
-// multiplied together produces 336
-//
-//
-// Day 4.1
-// =======
-// Arrive at airport yay. Grabbed North Pole Credentials instead of passport!
-// not valid for travel in most of the world.
-//
-// not the only one having problems. long line formed for automatic passport
-// scanners. Delay could upset travel itinerary.
-// Questionable network security, might be able to solve both problems at once.
-//
-// automatic passport scanners slow because having trouble detecting which
-// passp[orts have all required fields.
-// Expected fields:
-// byr
-// iyr
-// eyr
-// hgt
-// hcl
-// ecl
-// pid
-// cid
-// birth yr, issue yr, expiration yr, height, hair color, eye color, passport id,
-// country id
-//
-// pport data validated in batch files (puzzle input).
-// each passporet represented as a sequence of key:fvalue pairs
-// separated by spaces or newlines.
-// passports separated by blank lines.
-// example with 4 passports
-// ```
-// ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
-// byr:1937 iyr:2017 cid:147 hgt:183cm
-//
-// iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884
-// hcl:#cfa07d byr:1929
-//
-// hcl:#ae17e1 iyr:2013
-// eyr:2024
-// ecl:brn pid:760753108 byr:1931
-// hgt:179cm
-//
-// hcl:#cfa07d eyr:2025 pid:166559648
-// iyr:2011 ecl:brn hgt:59in
-// ```
-//
-// first pport valid, all 8 firleds present.
-// second invalid missing height.
-// third only missing field s cid, so looks like north pole cerendials, not pport.
-//
-// surely nobody would mind if you made system temporarily ignore missing cid fields.
-// treat thisas fvalid.
-//
-// 2 valid passports in above example.
-//
-// COUNT the number of valid passports.
-//
-//
-//
-// Day 5.1
-// =======
-// Binary Boarding
-//
-// board plane discover new problem, dropped boarding pass.
-// Don't know what seat is mine and flight attendants busy
-//
-// quick program use phone's camera scan all nearby boarding passes
-// (puzzle input).
-//
-// airline doesn't use zones or gorups it uses binary space partitioning
-// to seat people.
-//
-// A seat might be specified like `FBFBBFFRLR` where f front,back,left,right.
-//
-// First 7 chars either F or B. specify exactly 1 of the 128 rows
-// on the plane (0-127).
-// Each letter tells which half of a region the given seat is in.
-// start with whole list of rows. First letter indicates whetehr
-// seat in front (0-63) or back (64-127).
-// next letter indicates which half of that region the seat is in,...
-// until left with exactly one row.
-//
-// e.g. consider just first seven letters of
-// `FBFBBFFRLR`
-// start consider whole range 0-127,
-// F lower half, keep 0-63
-// B upper 32-63,
-// F 32-47
-// B 40-47
-// B 44-47
-// F 44-46
-// final F keeps lower ro44
-//
-// last three letters withe L or R specify one of the 8columns of seats
-// on that plane (0-7)
-// same process as above but this time with only 3 steps.
-// l lower, right upper.
-// 0-7
-// 4-7
-// 4-5
-// R upper col 5
-//
-// => row 44 col 5
-//
-// each seat unique seat id (row * 8 + column)
-//
-// this e.g. 44 * 8 + 5 = 357
-//
-// here are some other boarding passes
-//     BFFFBBFRRR: row 70, column 7, seat ID 567.
-//     FFFBBBFRRR: row 14, column 7, seat ID 119.
-//     BBFFBBFRLL: row 102, column 4, seat ID 820.
-//     o
-//
-// What is the highest seat ID on a boarding pass?
-//
-//
-// Day 5.2
-// =======
-// fasten seat belt sign on, time  to find seat.
-// completely full flight, so seat should be only missing
-// boarding pass in your list.
-//
-// but a catch: some seats at very front and back of plane
-// don't exist on this aircraft so they'll be missing
-// from the list as well.
-//
-// my  seat wasn't at the ver front or back though.
-// my seat ID + 1 and - 1 will be in the list
-//
-//
-// Day 6.1
-// =======
-// Flight approaches regional airport where switch to much larger plane.
-// Customs declaration forms distributed to the passengers.
-//
-// Form asks series of 26 yes-or-no questions marked `a` through `z`.
-// Need to identify the questions for which *anyone* in the group answers
-// "yes". Since group is just you, doesn't take very long.
-//
-// Helping person next to me.
-// For each person in their group, write down Q's for which tehy answer yes.
-// e.g.
-// ```
-// abcx
-// abcy
-// abcz
-// ```
-// In this group there are 6 questiosn (abcxyz) for which someone answered
-// yes.
-//
-// Another group asks for help and eventually collected answers from every
-// group (puzzle input). Each group answers separated by a blank line.
-// W/in each group, each person's answers on a single line.
-//
-// For each group count questions for which anyone answered yes.
-// What is the sum of these counts?
-//
-//
-//  Day 7.1
+//  Day 9: Encoding Error
+//  Day 9.1
 //  =======
-//  Land at regional airport for next flight.
-//  Have time to grab food, all flights delayed due to luggage processing.
+//  Port on seat in front of you outputs a series of numbers (puzzle input).
+//  Data encrypted with eXchange-Masking Addition System (XMAS)
+//  which is an old cypher with important weakness.
 //
-//  Recent aviation regulations require many rules (puzzle input) to be
-//  enforced about bags and contents. color-coded and contain specific
-//  quantities of other color-coded bags.
+//  XMAS starts by transmit preamble of 25 numbers.
+//  After that, each number receive should be sum of any two of the
+//  25 immediately preceding numbers.
+//  The two numbers will have different values and may be more than one such
+//  pair.
 //
-//  What number of bag colors can eventually contain at least one shiny
-//  gold bag?
-//
-//
-//  Day 8.1
-//  =======
-//  Run the program until you're about to executa an instruction twice
-//
-//  Day 8.2
-//  =======
-//  Somewhere in the program, 
-//  EITHER a jmp is supposed to be a nop,
-//  OR a nop is supposed to be a jmp.
-//
-//  Program should terminate by attempting to execute an instruction
-//  immediately after the last instruction in the file.
-//  By changing exactly one jmp or nop, can repair boot code and make it
-//  terminate correctly.
-//
-//  If change second to last instr in the example, (jmp-4 to nop-4)
-//  program terminates!
+//  Find the first number in the list (after preamble) which is not
+//  the sum of two of the 25 numbers before it?
+//  What is the first number that does not have this property?
 
-mod day_eight {
-    use regex::Regex;
+//use regex::Regex;
+//let re = Regex::new("^([[:alpha:]]*) ([+-][0-9]*)$").unwrap();
+//let caps = re.captures(slice).unwrap();
+//let op_code_str = caps.get(1).unwrap().as_str();
+//let value = caps.get(2).unwrap().as_str().parse::<i64>().unwrap();
+mod day_nine {
 
-    #[derive(Debug)]
-    pub enum OpCode {
-        Nop(i64),
-        Acc(i64),
-        Jmp(i64),
+    pub struct XmasCipher {
+        preamble_size: usize,
+        numbers: Vec<i64>,
     }
-    #[derive(Debug)]
-    pub struct Instruction {
-        op_code: OpCode,
-        number_of_times_executed: u64,
-    }
-    pub struct Program {
-        text: Vec<Instruction>,
-        accumulator: i64,
-    }
-    impl OpCode {
-        pub fn from_slice_and_int(slice: &str, int: i64) -> Option<OpCode> {
-            match slice {
-                "nop" => Some(OpCode::Nop(int)),
-                "acc" => Some(OpCode::Acc(int)),
-                "jmp" => Some(OpCode::Jmp(int)),
-                _ => None,
-            }
-        }
-    }
-    impl Instruction {
-        pub fn from_slice(slice: &str) -> Instruction {
-            let re = Regex::new("^([[:alpha:]]*) ([+-][0-9]*)$").unwrap();
-            let caps = re.captures(slice).unwrap();
-            let op_code_str = caps.get(1).unwrap().as_str();
-            let value = caps.get(2).unwrap().as_str().parse::<i64>().unwrap();
-            Instruction {
-                op_code: OpCode::from_slice_and_int(op_code_str, value).unwrap(),
-                number_of_times_executed: 0,
-            }
-        }
-        pub fn increment_execution_count(&mut self) {
-            self.number_of_times_executed = self.number_of_times_executed + 1;
-        }
-        pub fn has_been_executed_already(&self) -> bool {
-            self.number_of_times_executed > 0
-        }
-    }
-    impl Program {
-        pub fn new(text: Vec<Instruction>) -> Program {
-            let accumulator = 0;
-            Program { text, accumulator }
-        }
-        pub fn run_until_exec_instr_twice(&mut self) {
-            let mut instruction_pointer = 0u64;
-            loop {
-                let current_instruction = &mut self.text[instruction_pointer as usize];
-
-                if current_instruction.has_been_executed_already() { break; }
-
-                current_instruction.increment_execution_count();
-
-                // Execute instruction
-                println!("Curr instr: {:?}", current_instruction);
-                match current_instruction.op_code {
-                    OpCode::Acc(f) => {
-                        self.accumulator = self.accumulator + f;
-                        instruction_pointer = instruction_pointer + 1;
-                    },
-                    OpCode::Jmp(f) => {
-                        instruction_pointer = ((instruction_pointer as i64) +  f) as u64;
-                    },
-                    OpCode::Nop(_) => {
-                        instruction_pointer = instruction_pointer + 1;
-                    },
-                    //_ => {panic!("UH OH"); },
+    impl XmasCipher {
+        fn fits_cipher(&self, index: usize) -> bool {
+            let preceding = &self.numbers[index - self.preamble_size..index];
+            for i in 0..preceding.len() {
+                for j in i+1..preceding.len() {
+                    if preceding[i] + preceding[j] == self.numbers[index] {
+                        return true;
+                    }
                 }
             }
+
+            false
         }
-        pub fn get_accumulator_value (&self) -> i64 {
-            self.accumulator
+        pub fn get_first_number_not_fitting(&self) -> i64 {
+            for i in self.preamble_size..self.numbers.len() {
+                println!("{}", i);
+                if !self.fits_cipher(i) {
+                    return self.numbers[i];
+                }
+            }
+            panic!("DIdn't find a number");
+        }
+        pub fn new(numbers: Vec<i64>, preamble_size: usize) -> XmasCipher {
+            XmasCipher {
+                preamble_size,
+                numbers,
+            }
         }
     }
 }
@@ -386,14 +63,16 @@ mod day_eight {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
     let input = input.trim();
-    let instructions = input
+    let numbers = input
         .split("\n")
-        .map(|slice| day_eight::Instruction::from_slice(slice))
-        .collect::<Vec<day_eight::Instruction>>();
+        .map(|x| x.parse::<i64>())
+        .collect::<Result<Vec<i64>, _>>()
+        .unwrap();
 
-    let mut program = day_eight::Program::new(instructions);
-    program.run_until_exec_instr_twice();
-    println!("The acc is: {}", program.get_accumulator_value());
+    let cipher = day_nine::XmasCipher::new(numbers, 25);
+
+    let answer = cipher.get_first_number_not_fitting();
+    println!("Answer: {}", answer);
 
     Ok(())
 }

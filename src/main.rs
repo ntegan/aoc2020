@@ -281,80 +281,100 @@ mod myerror;
 //  What number of bag colors can eventually contain at least one shiny
 //  gold bag?
 
-mod day_seven {
+mod day_eight {
     use regex::Regex;
+
     #[derive(Debug)]
-    pub struct Bag {
-        bag_name: String,
-        number: Option<u64>,
-        contained_bags: Option<Vec<Bag>>,
+    pub enum OpCode {
+        Nop(i64),
+        Acc(i64),
+        Jmp(i64),
     }
     #[derive(Debug)]
-    pub struct Rule {
-        bag: Bag,
+    pub struct Instruction {
+        op_code: OpCode,
+        number_of_times_executed: u64,
     }
-    impl Bag {
-        fn get_contained_bags(string: &str) -> Vec<Bag> {
-            //let re = Regex::new("^([0-9]*) (.*) bag[s]?[,.](.*)$").unwrap();
-            let re = Regex::new(r"(\d*) ([[:alpha:]]* [[:alpha:]]*) bag[s]?").unwrap();
-            let mut bags = Vec::new();
-            for cap in re.captures_iter(string) {
-                let g = cap.get(1).unwrap().as_str().parse::<u64>().unwrap();
-                let h = cap.get(2).unwrap().as_str();
-                bags.push(Bag {
-                    bag_name: String::from(h),
-                    number: Some(g),
-                    contained_bags: None,
-                });
+    pub struct Program {
+        text: Vec<Instruction>,
+        accumulator: i64,
+    }
+    impl OpCode {
+        pub fn from_slice_and_int(slice: &str, int: i64) -> Option<OpCode> {
+            match slice {
+                "nop" => Some(OpCode::Nop(int)),
+                "acc" => Some(OpCode::Acc(int)),
+                "jmp" => Some(OpCode::Jmp(int)),
+                _ => None,
             }
-            bags
-        }
-        pub fn from_slice(string: &str) -> Bag {
-            // get bag_name
-            let re = Regex::new("^(.*) bags contain.*$").unwrap();
-            let caps = re.captures(string).unwrap();
-            let bag_name = String::from(caps.get(1).unwrap().as_str());
-
-            // Return None if no contained bags
-            let re = Regex::new("^.* bags contain no other bags.*").unwrap();
-            let caps = re.captures(string);
-            if let Some(_) = caps {
-                return Bag {
-                    bag_name: bag_name,
-                    number: None,
-                    contained_bags: None,
-                };
-            }
-
-            let re = Regex::new("^.*bags contain (.*)$").unwrap();
-            let caps = re.captures(string).unwrap();
-            let contained_bags_str = caps.get(1).unwrap().as_str();
-
-            return Bag {
-                bag_name: bag_name,
-                number: None,
-                contained_bags: Some(Bag::get_contained_bags(contained_bags_str)),
-            };
         }
     }
-    impl Rule {
-        pub fn from_slice(string: &str) -> Rule {
-            Rule {
-                bag: Bag::from_slice(string),
+    impl Instruction {
+        pub fn from_slice(slice: &str) -> Instruction {
+            let re = Regex::new("^([[:alpha:]]*) ([+-][0-9]*)$").unwrap();
+            let caps = re.captures(slice).unwrap();
+            let op_code_str = caps.get(1).unwrap().as_str();
+            let value = caps.get(2).unwrap().as_str().parse::<i64>().unwrap();
+            Instruction {
+                op_code: OpCode::from_slice_and_int(op_code_str, value).unwrap(),
+                number_of_times_executed: 0,
             }
+        }
+        pub fn increment_execution_count(&mut self) {
+            self.number_of_times_executed = self.number_of_times_executed + 1;
+        }
+        pub fn has_been_executed_already(&self) -> bool {
+            self.number_of_times_executed > 0
+        }
+    }
+    impl Program {
+        pub fn new(text: Vec<Instruction>) -> Program {
+            let accumulator = 0;
+            Program { text, accumulator }
+        }
+        pub fn run_until_exec_instr_twice(&mut self) {
+            let mut instruction_pointer = 0u64;
+            loop {
+                let current_instruction = &mut self.text[instruction_pointer as usize];
+
+                if current_instruction.has_been_executed_already() { break; }
+
+                current_instruction.increment_execution_count();
+
+                // Execute instruction
+                println!("Curr instr: {:?}", current_instruction);
+                match current_instruction.op_code {
+                    OpCode::Acc(f) => {
+                        self.accumulator = self.accumulator + f;
+                        instruction_pointer = instruction_pointer + 1;
+                    },
+                    OpCode::Jmp(f) => {
+                        instruction_pointer = ((instruction_pointer as i64) +  f) as u64;
+                    },
+                    OpCode::Nop(_) => {
+                        instruction_pointer = instruction_pointer + 1;
+                    },
+                    _ => {panic!("UH OH"); },
+                }
+            }
+        }
+        pub fn get_accumulator_value (&self) -> i64 {
+            self.accumulator
         }
     }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
+    let input = input.trim();
+    let instructions = input
+        .split("\n")
+        .map(|slice| day_eight::Instruction::from_slice(slice))
+        .collect::<Vec<day_eight::Instruction>>();
 
-    let input = input.trim().split("\n").collect::<Vec<&str>>();
-
-    for line in &input {
-        let rule = day_seven::Rule::from_slice(line);
-        println!("rule:\n{:?}\n", rule);
-    }
+    let mut program = day_eight::Program::new(instructions);
+    program.run_until_exec_instr_twice();
+    println!("The acc is: {}", program.get_accumulator_value());
 
     Ok(())
 }

@@ -280,6 +280,25 @@ mod myerror;
 //
 //  What number of bag colors can eventually contain at least one shiny
 //  gold bag?
+//
+//
+//  Day 8.1
+//  =======
+//  Run the program until you're about to executa an instruction twice
+//
+//  Day 8.2
+//  =======
+//  Somewhere in the program, 
+//  EITHER a jmp is supposed to be a nop,
+//  OR a nop is supposed to be a jmp.
+//
+//  Program should terminate by attempting to execute an instruction
+//  immediately after the last instruction in the file.
+//  By changing exactly one jmp or nop, can repair boot code and make it
+//  terminate correctly.
+//
+//  If change second to last instr in the example, (jmp-4 to nop-4)
+//  program terminates!
 
 mod day_eight {
     use regex::Regex;
@@ -354,7 +373,7 @@ mod day_eight {
                     OpCode::Nop(_) => {
                         instruction_pointer = instruction_pointer + 1;
                     },
-                    _ => {panic!("UH OH"); },
+                    //_ => {panic!("UH OH"); },
                 }
             }
         }

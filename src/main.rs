@@ -17,6 +17,11 @@ mod myerror;
 //  Find the first number in the list (after preamble) which is not
 //  the sum of two of the 25 numbers before it?
 //  What is the first number that does not have this property?
+//
+//  Day 9.2
+//  =======
+//  Must find a contiguous set of at least 2 numbers in your list which
+//  sum up to the invalid number from step 1
 
 //use regex::Regex;
 //let re = Regex::new("^([[:alpha:]]*) ([+-][0-9]*)$").unwrap();
@@ -44,7 +49,6 @@ mod day_nine {
         }
         pub fn get_first_number_not_fitting(&self) -> i64 {
             for i in self.preamble_size..self.numbers.len() {
-                println!("{}", i);
                 if !self.fits_cipher(i) {
                     return self.numbers[i];
                 }
@@ -56,6 +60,20 @@ mod day_nine {
                 preamble_size,
                 numbers,
             }
+        }
+        pub fn get_range_adding_up_to(&self, target: i64) -> &[i64] {
+            for i in 0..self.numbers.len()-1 {
+                for j in i + 1..self.numbers.len() {
+                    let sum: i64 = self.numbers[i..j].iter().sum();
+                    if sum == target {
+                        return &self.numbers[i..j];
+                    }
+                    if sum > target {
+                        break;
+                    }
+                }
+            }
+            panic!("Couldn't find");
         }
     }
 }
@@ -72,7 +90,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cipher = day_nine::XmasCipher::new(numbers, 25);
 
     let answer = cipher.get_first_number_not_fitting();
+
+    let range = cipher.get_range_adding_up_to(answer);
     println!("Answer: {}", answer);
+    println!("Range: {:?}", range);
+    println!("{}", range.iter().min().unwrap() + range.iter().max().unwrap());
 
     Ok(())
 }

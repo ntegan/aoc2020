@@ -268,60 +268,80 @@ mod myerror;
 // For each group count questions for which anyone answered yes.
 // What is the sum of these counts?
 //
+//
+//  Day 7.1
+//  =======
+//  Land at regional airport for next flight.
+//  Have time to grab food, all flights delayed due to luggage processing.
+//
+//  Recent aviation regulations require many rules (puzzle input) to be
+//  enforced about bags and contents. color-coded and contain specific
+//  quantities of other color-coded bags.
+//
+//  What number of bag colors can eventually contain at least one shiny
+//  gold bag?
 
-mod day_six {
+mod day_seven {
+    use regex::Regex;
     #[derive(Debug)]
-    pub struct Person {
-        affirmative_questions: Vec<char>,
-    }
-    impl Person {
-        pub fn from_slice(string: &str) -> Person {
-            let mut vec = Vec::new();
-            for charr in string.chars() {
-                vec.push(charr);
-            }
-            Person {
-                affirmative_questions: vec,
-            }
-        }
-        pub fn get_questions(&self) -> &Vec<char> {
-            &self.affirmative_questions
-        }
+    pub struct Bag {
+        bag_name: String,
+        number: Option<u64>,
+        contained_bags: Option<Vec<Bag>>,
     }
     #[derive(Debug)]
-    pub struct Group {
-        people: Vec<Person>,
+    pub struct Rule {
+        bag: Bag,
     }
-    impl Group {
-        pub fn from_slice(string: &str) -> Group {
-            let mut vec = Vec::new();
-            for charr in string.split("\n") {
-                vec.push(Person::from_slice(charr));
+    impl Bag {
+        fn get_contained_bags(string: &str) -> Vec<Bag> {
+            //let re = Regex::new("^([0-9]*) (.*) bag[s]?[,.](.*)$").unwrap();
+            let re = Regex::new(r"(\d*) ([[:alpha:]]* [[:alpha:]]*) bag[s]?").unwrap();
+            let mut bags = Vec::new();
+            for cap in re.captures_iter(string) {
+                let g = cap.get(1).unwrap().as_str().parse::<u64>().unwrap();
+                let h = cap.get(2).unwrap().as_str();
+                bags.push(Bag {
+                    bag_name: String::from(h),
+                    number: Some(g),
+                    contained_bags: None,
+                });
             }
-            Group { people: vec }
+            bags
         }
-        pub fn count_unanimous_affirmatives(&self) -> u64 {
-            // Get the first person's questions
-            let mut unanimous_affirmatives = Vec::new();
-            // TODO
-            let mut remove_from = Vec::new();
-            for question in self.people[0].get_questions() {
-                unanimous_affirmatives.push(question);
+        pub fn from_slice(string: &str) -> Bag {
+            // get bag_name
+            let re = Regex::new("^(.*) bags contain.*$").unwrap();
+            let caps = re.captures(string).unwrap();
+            let bag_name = String::from(caps.get(1).unwrap().as_str());
+
+            // Return None if no contained bags
+            let re = Regex::new("^.* bags contain no other bags.*").unwrap();
+            let caps = re.captures(string);
+            if let Some(_) = caps {
+                return Bag {
+                    bag_name: bag_name,
+                    number: None,
+                    contained_bags: None,
+                };
             }
-            for i in  1..self.people.len()  {
-                for question in &unanimous_affirmatives {
-                    if !self.people[i].get_questions().contains(question) {
-                        remove_from.push(question);
-                    }
-                }
+
+            let re = Regex::new("^.*bags contain (.*)$").unwrap();
+            let caps = re.captures(string).unwrap();
+            let contained_bags_str = caps.get(1).unwrap().as_str();
+
+            return Bag {
+                bag_name: bag_name,
+                number: None,
+                contained_bags: Some(Bag::get_contained_bags(contained_bags_str)),
+            };
+        }
+    }
+    impl Rule {
+        pub fn from_slice(string: &str) -> Rule {
+            Rule {
+                bag: Bag::from_slice(string),
             }
-            remove_from.sort();
-            remove_from.dedup();
-            let unanimous_affirmatives = unanimous_affirmatives
-                .iter()
-                .filter(|x| !remove_from.contains(x))
-                .collect::<Vec<&&char>>();
-            unanimous_affirmatives.len() as u64
         }
     }
 }
@@ -329,14 +349,12 @@ mod day_six {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = input::read_until_eof()?;
 
-    let mut total = 0;
-    for line in input.split("\n\n") {
-        let group = day_six::Group::from_slice(line.trim());
-        let f = group.count_unanimous_affirmatives();
-        total = total + f;
-    }
+    let input = input.trim().split("\n").collect::<Vec<&str>>();
 
-    println!("{}", total);
+    for line in &input {
+        let rule = day_seven::Rule::from_slice(line);
+        println!("rule:\n{:?}\n", rule);
+    }
 
     Ok(())
 }
